@@ -36,6 +36,7 @@ jobs:
       # 5. Run scoring script
       - name: Run scoring
         run: |
+          git fetch origin main
           SUBMISSION_FILE=$(git diff --name-only origin/main...HEAD | grep '^submissions/.*\.csv$')
           echo "Scoring submission file: $SUBMISSION_FILE"
           python scoring_script.py "$SUBMISSION_FILE"
