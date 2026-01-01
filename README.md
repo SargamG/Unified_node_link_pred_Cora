@@ -129,4 +129,5 @@ It demonstrates:
 - shared node embeddings
 - joint optimization of node + link tasks
 - correct submission format
+
 Participants are encouraged to improve upon it.
