@@ -1,0 +1,45 @@
+name: Score Submission
+
+on:
+  pull_request:
+    paths:
+      - 'submissions/*.csv'
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch pandas numpy scikit-learn
+
+      # 4. Decrypt test labels (THIS IS THE KEY STEP)
+      - name: Decrypt test labels
+        run: |
+          unzip -P "$TEST_LABELS_PASSWORD" data/test_labels.zip -d data
+        env:
+          TEST_LABELS_PASSWORD: ${{ secrets.TEST_LABELS_PASSWORD }}
+
+      # 5. Run scoring script
+      - name: Run scoring
+        run: |
+          python scoring_script.py submissions/$(ls submissions | head -n 1)
+
+      # 6. Update leaderboard (optional, placeholder)
+      # You will later replace this with update_leaderboard.py
+      - name: Show leaderboard placeholder
+        run: |
+          echo "Leaderboard update step goes here"
