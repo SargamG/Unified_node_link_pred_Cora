@@ -1,23 +1,15 @@
 import os
 import re
 import pandas as pd
+import json
 
 LEADERBOARD_PATH = "leaderboard.md"
 SCORE_LOG_PATH = "score.txt"
 
-def parse_scores(score_log_path):
-    """
-    Extract Node F1, Link AUC, and Final Score
-    from scoring_script.py output.
-    """
-    with open(score_log_path, "r") as f:
-        text = f.read()
-
-    node_f1 = float(re.search(r"Node Macro-F1\s*:\s*([0-9.]+)", text).group(1))
-    link_auc = float(re.search(r"Link ROC-AUC\s*:\s*([0-9.]+)", text).group(1))
-    final_score = float(re.search(r"Final Score\s*:\s*([0-9.]+)", text).group(1))
-
-    return node_f1, link_auc, final_score
+def parse_scores(_=None):
+    with open("scores.json", "r") as f:
+        scores = json.load(f)
+    return scores["node_f1"], scores["link_auc"], scores["final_score"]
 
 
 def load_leaderboard():
