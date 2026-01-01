@@ -102,11 +102,10 @@ Submissions that violate these rules may be disqualified.
 1. Fork this repository  
 2. Generate predictions for **all rows** in `data/test.csv`
 3. Create a CSV file in the following format:
-```csv
-id,prediction
-node_1708,3
-edge_12_45,0.82
-
+    ```csv
+    id,prediction
+    node_1708,3
+    edge_12_45,0.82
 4. Node rows → prediction is a class label (integer)
 5. Edge rows → prediction is a probability in [0,1]
 6. Place the file in: submissions/
