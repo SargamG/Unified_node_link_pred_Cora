@@ -1,14 +1,16 @@
 import os
-import re
 import pandas as pd
 import json
 
 LEADERBOARD_PATH = "leaderboard.md"
-SCORE_LOG_PATH = "score.txt"
 
 def parse_scores(_=None):
+    if not os.path.exists("scores.json"):
+        raise RuntimeError("scores.json not found. Scoring step likely failed.")
+
     with open("scores.json", "r") as f:
         scores = json.load(f)
+
     return scores["node_f1"], scores["link_auc"], scores["final_score"]
 
 
@@ -89,7 +91,7 @@ def save_leaderboard(df):
 def main():
     participant = os.environ.get("GITHUB_ACTOR", "unknown")
 
-    node_f1, link_auc, final_score = parse_scores(SCORE_LOG_PATH)
+    node_f1, link_auc, final_score = parse_scores()
     leaderboard = load_leaderboard()
 
     # Update only if better score
