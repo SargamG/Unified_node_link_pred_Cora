@@ -36,7 +36,7 @@ jobs:
       # 5. Run scoring script
       - name: Run scoring
         run: |
-          python scoring_script.py submissions/$(ls submissions | head -n 1) | tee score.txt
+          python scoring_script.py submissions/$(ls submissions | head -n 1)
 
       # 6. Update leaderboard
       - name: Update leaderboard
