@@ -102,7 +102,6 @@ Submissions that violate these rules may be disqualified.
 1. Fork this repository  
 2. Generate predictions for **all rows** in `data/test.csv`
 3. Create a CSV file in the following format:
-
 ```csv
 id,prediction
 node_1708,3
