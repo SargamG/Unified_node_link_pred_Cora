@@ -36,10 +36,15 @@ jobs:
       # 5. Run scoring script
       - name: Run scoring
         run: |
-          python scoring_script.py submissions/$(ls submissions | head -n 1)
+          python scoring_script.py submissions/$(ls submissions | head -n 1) | tee score.txt
 
-      # 6. Update leaderboard (optional, placeholder)
-      # You will later replace this with update_leaderboard.py
-      - name: Show leaderboard placeholder
+      # 6. Update leaderboard
+      - name: Update leaderboard
         run: |
-          echo "Leaderboard update step goes here"
+          python update_leaderboard.py
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add leaderboard.md
+          git commit -m "Update leaderboard"
+          git push
+
