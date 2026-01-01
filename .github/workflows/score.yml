@@ -1,7 +1,7 @@
 name: Score Submission
 
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - 'submissions/*.csv'
 
