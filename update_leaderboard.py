@@ -1,17 +1,23 @@
 import os
+import re
 import pandas as pd
-import json
 
 LEADERBOARD_PATH = "leaderboard.md"
+SCORE_LOG_PATH = "score.txt"
 
-def parse_scores(_=None):
-    if not os.path.exists("scores.json"):
-        raise RuntimeError("scores.json not found. Scoring step likely failed.")
+def parse_scores(score_log_path):
+    """
+    Extract Node F1, Link AUC, and Final Score
+    from scoring_script.py output.
+    """
+    with open(score_log_path, "r") as f:
+        text = f.read()
 
-    with open("scores.json", "r") as f:
-        scores = json.load(f)
+    node_f1 = float(re.search(r"Node Macro-F1\s*:\s*([0-9.]+)", text).group(1))
+    link_auc = float(re.search(r"Link ROC-AUC\s*:\s*([0-9.]+)", text).group(1))
+    final_score = float(re.search(r"Final Score\s*:\s*([0-9.]+)", text).group(1))
 
-    return scores["node_f1"], scores["link_auc"], scores["final_score"]
+    return node_f1, link_auc, final_score
 
 
 def load_leaderboard():
@@ -60,18 +66,6 @@ def save_leaderboard(df):
         "This leaderboard tracks the best submission score for each participant.\n\n"
     )
     lines.append(
-        "- **Final Score** = 0.5 × Node Macro-F1 + 0.5 × Link ROC-AUC\n"
-    )
-    lines.append(
-        "- Only the **best score per participant** is retained.\n"
-    )
-    lines.append(
-        "- Submissions are evaluated automatically via GitHub Actions.\n\n"
-    )
-    lines.append(
-        "---\n\n"
-    )
-    lines.append(
         "| Rank | Participant | Node F1 | Link AUC | Final Score |\n"
     )
     lines.append(
@@ -91,7 +85,7 @@ def save_leaderboard(df):
 def main():
     participant = os.environ.get("GITHUB_ACTOR", "unknown")
 
-    node_f1, link_auc, final_score = parse_scores()
+    node_f1, link_auc, final_score = parse_scores(SCORE_LOG_PATH)
     leaderboard = load_leaderboard()
 
     # Update only if better score
