@@ -1,5 +1,4 @@
 # 🏆 Leaderboard
-
 This leaderboard tracks the best submission score for each participant.
 
 - **Final Score** = 0.5 × Node Macro-F1 + 0.5 × Link ROC-AUC
@@ -10,4 +9,4 @@ This leaderboard tracks the best submission score for each participant.
 
 | Rank | Participant | Node F1 | Link AUC | Final Score |
 |------|-------------|---------|----------|-------------|
-| —    | —           | —       | —        | —           |
+| 1 | Sargam1412 | 0.1365 | 0.5019 | 0.3192 |
