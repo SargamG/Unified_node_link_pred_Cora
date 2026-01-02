@@ -1,5 +1,4 @@
 name: Score Submission
-
 on:
   pull_request_target:
     paths:
@@ -7,47 +6,73 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   score:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout the repository
-      - name: Checkout repository
+      # 1. Checkout the PR branch (this is crucial!)
+      - name: Checkout PR
         uses: actions/checkout@v4
-
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          
       # 2. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
+          
       # 3. Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install torch pandas numpy scikit-learn
-
-      # 4. Decrypt test labels (THIS IS THE KEY STEP)
+          
+      # 4. Decrypt test labels
       - name: Decrypt test labels
         run: |
           unzip -P "$TEST_LABELS_PASSWORD" data/test_labels.zip -d data
         env:
           TEST_LABELS_PASSWORD: ${{ secrets.TEST_LABELS_PASSWORD }}
-
-      # 5. Run scoring script
+          
+      # 5. Find and verify submission file
+      - name: Find submission file
+        id: find_submission
+        run: |
+          SUBMISSION_FILE=$(find submissions -name "*.csv" -type f | head -n 1)
+          if [ -z "$SUBMISSION_FILE" ]; then
+            echo "Error: No submission file found"
+            exit 1
+          fi
+          echo "Found submission: $SUBMISSION_FILE"
+          echo "submission_file=$SUBMISSION_FILE" >> $GITHUB_OUTPUT
+          
+      # 6. Run scoring script
       - name: Run scoring
         run: |
-          python scoring_script.py submissions/$(ls submissions | head -n 1) | tee score.txt
-
-      # 6. Update leaderboard
+          python scoring_script.py ${{ steps.find_submission.outputs.submission_file }} 2>&1 | tee score.txt
+          echo "--- Contents of score.txt ---"
+          cat score.txt
+          echo "--- End of score.txt ---"
+          
+      # 7. Update leaderboard
       - name: Update leaderboard
         run: |
           python update_leaderboard.py
+          
+      # 8. Commit and push to main
+      - name: Commit leaderboard changes
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
           git add leaderboard.md
-          git diff --staged --quiet || git commit -m "Update leaderboard for @${{ github.event.pull_request.user.login }}"
-          git push origin HEAD:main  # Push to main branch
-
+          if git diff --staged --quiet; then
+            echo "No changes to leaderboard"
+          else
+            git commit -m "Update leaderboard for @${{ github.event.pull_request.user.login }}"
+            git push origin main
+          fi
