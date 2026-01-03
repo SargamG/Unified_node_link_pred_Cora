@@ -13,9 +13,17 @@ def parse_scores(score_log_path):
     with open(score_log_path, "r") as f:
         text = f.read()
 
-    node_f1 = float(re.search(r"Node Macro-F1\s*:\s*([0-9.]+)", text).group(1))
-    link_auc = float(re.search(r"Link ROC-AUC\s*:\s*([0-9.]+)", text).group(1))
-    final_score = float(re.search(r"Final Score\s*:\s*([0-9.]+)", text).group(1))
+    # More flexible regex that handles variable whitespace
+    node_match = re.search(r"Node Macro-F1\s*:\s*([0-9.]+)", text)
+    link_match = re.search(r"Link ROC-AUC\s*:\s*([0-9.]+)", text)
+    final_match = re.search(r"Final Score\s*:\s*([0-9.]+)", text)
+    
+    if not node_match or not link_match or not final_match:
+        raise ValueError(f"Could not parse scores from {score_log_path}. Content:\n{text}")
+    
+    node_f1 = float(node_match.group(1))
+    link_auc = float(link_match.group(1))
+    final_score = float(final_match.group(1))
 
     return node_f1, link_auc, final_score
 
@@ -64,18 +72,6 @@ def save_leaderboard(df):
     lines.append("# 🏆 Leaderboard\n")
     lines.append(
         "This leaderboard tracks the best submission score for each participant.\n\n"
-    )
-    lines.append(
-        "- **Final Score** = 0.5 × Node Macro-F1 + 0.5 × Link ROC-AUC\n"
-    )
-    lines.append(
-        "- Only the **best score per participant** is retained.\n"
-    )
-    lines.append(
-        "- Submissions are evaluated automatically via GitHub Actions.\n\n"
-    )
-    lines.append(
-        "---\n\n"
     )
     lines.append(
         "| Rank | Participant | Node F1 | Link AUC | Final Score |\n"

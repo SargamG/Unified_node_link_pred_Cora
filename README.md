@@ -91,7 +91,7 @@ To keep the challenge fair and focused:
 - ❌ No external datasets or pretrained models are allowed
 - ❌ No manual label engineering  
 - ✅ Any GNN architecture allowed (GCN, GraphSAGE, etc.)
-- ❌ Solutions using different embeddings for both tasks will be disqualified.
+- ❌ Solutions should not use different embeddings for both tasks
 
 Submissions that violate these rules may be disqualified.
 
@@ -111,6 +111,8 @@ Submissions that violate these rules may be disqualified.
 6. Place the file in: submissions/
 7. Open a Pull Request to this repository
 8. Your submission will be scored automatically using GitHub Actions.
+
+**Note**: If your submission is not scored automatically, it is likely because your GitHub account is considered a first-time or new contributor. In this case, make any prior public contribution on GitHub (e.g., open a PR anywhere, even a typo fix), then re-submit.
 
 ---
 
