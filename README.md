@@ -108,9 +108,11 @@ Submissions that violate these rules may be disqualified.
     edge_12_45,0.82
 4. Node rows → prediction is a class label (integer)
 5. Edge rows → prediction is a probability in [0,1]
-6. Place the file in: submissions/
-7. Open a Pull Request to this repository
-8. Your submission will be scored automatically using GitHub Actions.
+6. Place the file in: submissions/ (Make sure only the latest submission csv is present in submissions. Remove any previous csv files.)
+7. Sync your forked repo and update it just before creating a PR. If there are no commits to fetch, move to the next step. 
+8. Open a Pull Request to this repository
+9. Your submission will be scored automatically and the PR will be closed. It may take 2-3 minutes for the leaderboard to update.
+10. If your submission fails, the PR will stay open and show the most likely failure reason. Make sure the submission format( no. of rows, columns, column titles, row ids) are correct.
 
 **Note**: If your submission is not scored automatically, it is likely because your GitHub account is considered a first-time or new contributor. In this case, make any prior public contribution on GitHub (e.g., open a PR anywhere, even a typo fix), then re-submit.
 
