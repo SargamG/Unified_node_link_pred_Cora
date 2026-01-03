@@ -143,7 +143,7 @@ Participants are encouraged to improve upon it. Focus on improving the GNN's lea
 
 This challenge is inspired by the motivation of the One-For-All (OFA) paper, which highlights the tension between different graph tasks when using a single GNN. As discussed in its introduction:
 
-    “For node-level tasks, proper smoothing of the node features leads to good performance. However, for link-level and graph-level tasks, encoding the local structure is vital to success,     encouraging a line of work that develops more expressive GNNs. Generally, a powerful model for node-level tasks may not work on link-level or graph-level tasks.”
+*“For node-level tasks, proper smoothing of the node features leads to good performance. However, for link-level and graph-level tasks, encoding the local structure is vital to success, encouraging a line of work that develops more expressive GNNs. Generally, a powerful model for node-level tasks may not work on link-level or graph-level tasks.”*
 
 This challenge adopts the same conceptual question by requiring a single GNN to support both node classification and link prediction.
 
