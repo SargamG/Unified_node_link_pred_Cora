@@ -134,4 +134,4 @@ It demonstrates:
 - joint optimization of node + link tasks
 - correct submission format
 
-Participants are encouraged to improve upon it.
+Participants are encouraged to improve upon it. Focus on improving the GNN's learnt features rather than modifying the complete model architecture. A GNN with two MLP heads for prediction as in the baseline should suffice.
