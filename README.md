@@ -4,7 +4,7 @@
 This challenge explores how well a **single graph neural network (GNN)** can learn **shared node representations** that generalize across **multiple graph tasks** on the same dataset.
 
 Participants must train a model that performs well on **both node classification and link prediction**, using only the provided graph data and within strict constraints.
-
+[View Live Leaderboard](https://github.com/SargamG/Unified_node_link_pred_Cora/leaderboard.md)
 ---
 
 ## 1️⃣ Problem Statement
