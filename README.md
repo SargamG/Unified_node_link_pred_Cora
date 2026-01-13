@@ -125,6 +125,7 @@ Submissions that violate these rules may be disqualified.
 - Only the best score per participant is retained
 - Scores update instantly after PR submission
 
+### [View Live Leaderboard](https://github.com/SargamG/Unified_node_link_pred_Cora/blob/main/leaderboard.md)
 ---
 
 ## 📌 Getting Started
