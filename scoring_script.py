@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
 from sklearn.metrics import f1_score, roc_auc_score
+import json
 
 """
 Usage:
@@ -74,6 +75,15 @@ def main():
     print(f"Node Macro-F1 : {node_f1:.4f}")
     print(f"Link ROC-AUC  : {link_auc:.4f}")
     print(f"Final Score  : {final_score:.4f}")
+
+    scores = {
+        "node_f1": node_f1,
+        "link_auc": link_auc,
+        "final_score": final_score,
+    }
+    
+    with open("scores.json", "w") as f:
+        json.dump(scores, f)
     
 if __name__ == "__main__":
     main()
