@@ -5,7 +5,7 @@ This challenge explores how well a **single graph neural network (GNN)** can lea
 
 Participants must train a model that performs well on **both node classification and link prediction**, using only the provided graph data and within strict constraints.
 
-### [View Live Leaderboard](https://github.com/SargamG.github.io/Unified_node_link_pred_Cora/eaderboard.html)
+### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora/leaderboard.html)
 ---
 
 ## 1️⃣ Problem Statement
@@ -125,7 +125,7 @@ Submissions that violate these rules may be disqualified.
 - Only the best score per participant is retained
 - Scores update instantly after PR submission
 
-### [View Live Leaderboard](https://github.com/SargamG.github.io/Unified_node_link_pred_Cora/leaderboard.html)
+### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora/leaderboard.html)
 ---
 
 ## 📌 Getting Started
