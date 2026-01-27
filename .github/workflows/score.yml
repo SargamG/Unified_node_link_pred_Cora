@@ -75,7 +75,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout main
-          git add leaderboard.md
+          git add leaderboard.json
           if git diff --staged --quiet; then
             echo "No changes to leaderboard"
           else

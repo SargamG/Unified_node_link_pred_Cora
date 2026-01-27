@@ -5,6 +5,7 @@ This challenge explores how well a **single graph neural network (GNN)** can lea
 
 Participants must train a model that performs well on **both node classification and link prediction**, using only the provided graph data and within strict constraints.
 
+### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora/leaderboard.html)
 ---
 
 ## 1️⃣ Problem Statement
@@ -108,9 +109,11 @@ Submissions that violate these rules may be disqualified.
     edge_12_45,0.82
 4. Node rows → prediction is a class label (integer)
 5. Edge rows → prediction is a probability in [0,1]
-6. Place the file in: submissions/
-7. Open a Pull Request to this repository
-8. Your submission will be scored automatically using GitHub Actions.
+6. Place the file in: submissions/ (Make sure only the latest submission csv is present in submissions. Remove any previous csv files.)
+7. Sync your forked repo and update it just before creating a PR. If there are no commits to fetch, move to the next step. 
+8. Open a Pull Request to this repository
+9. Your submission will be scored automatically and the PR will be closed. It may take 2-3 minutes for the leaderboard to update.
+10. If your submission fails, the PR will stay open and show the most likely failure reason. Make sure the submission format( no. of rows, columns, column titles, row ids) are correct.
 
 **Note**: If your submission is not scored automatically, it is likely because your GitHub account is considered a first-time or new contributor. In this case, make any prior public contribution on GitHub (e.g., open a PR anywhere, even a typo fix), then re-submit.
 
@@ -122,6 +125,7 @@ Submissions that violate these rules may be disqualified.
 - Only the best score per participant is retained
 - Scores update instantly after PR submission
 
+### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora/leaderboard.html)
 ---
 
 ## 📌 Getting Started
@@ -132,4 +136,19 @@ It demonstrates:
 - joint optimization of node + link tasks
 - correct submission format
 
-Participants are encouraged to improve upon it.
+Participants are encouraged to improve upon it. Focus on improving the GNN's learnt features rather than modifying the complete model architecture. A GNN with two MLP heads for prediction as in the baseline should suffice.
+
+---
+
+## 💡 Inspiration for the challenge
+### Inspiration from the One-For-All (OFA) Paper
+
+This challenge is inspired by the motivation of the One-For-All (OFA) paper, which highlights the tension between different graph tasks when using a single GNN. As discussed in its introduction:
+
+*“For node-level tasks, proper smoothing of the node features leads to good performance. However, for link-level and graph-level tasks, encoding the local structure is vital to success, encouraging a line of work that develops more expressive GNNs. Generally, a powerful model for node-level tasks may not work on link-level or graph-level tasks.”*
+
+This challenge adopts the same conceptual question by requiring a single GNN to support both node classification and link prediction.
+
+### Staying Within Lecture Scope
+
+While inspired by OFA, the challenge does not require participants to implement complex architectures proposed in the paper. Instead, participants learn shared node embeddings using a single GNN, and apply separate MLP heads for node classification and link prediction. This structure, also used in the provided baseline, captures the essence of OFA’s motivation while relying only on techniques covered in the DGL lectures (particularly Lectures 2 and 3), such as learning feature embeddings and designing and training GNNs.
