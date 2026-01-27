@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GNN Challenge Leaderboard</title>
+  <style>
+    body { font-family: Arial; background: #0f172a; color: white; }
+    table { border-collapse: collapse; margin: auto; }
+    th, td { padding: 12px 18px; }
+    th { background: #1e293b; }
+    tr:nth-child(even) { background: #1e293b; }
+    tr:nth-child(odd) { background: #334155; }
+    h1 { text-align: center; }
+  </style>
+</head>
+<body>
+<h1>🏆 GNN Challenge Leaderboard</h1>
+<table id="board">
+  <tr>
+    <th>Rank</th>
+    <th>Participant</th>
+    <th>Node F1</th>
+    <th>Link AUC</th>
+    <th>Final Score</th>
+  </tr>
+</table>
+
+<script>
+fetch("leaderboard.json")
+  .then(res => res.json())
+  .then(data => {
+    const table = document.getElementById("board");
+    data.submissions.forEach((s, i) => {
+      table.innerHTML += `
+        <tr>
+          <td>${i+1}</td>
+          <td>${s.participant}</td>
+          <td>${s.node_f1.toFixed(4)}</td>
+          <td>${s.link_auc.toFixed(4)}</td>
+          <td>${s.final_score.toFixed(4)}</td>
+        </tr>`;
+    });
+  });
+</script>
+</body>
+</html>
