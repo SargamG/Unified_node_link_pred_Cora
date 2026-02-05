@@ -1,0 +1,6 @@
+task: multitask_node_and_link
+metrics:
+  node: macro_f1
+  link: roc_auc
+score:
+  formula: "0.5 * node_f1 + 0.5 * link_auc"

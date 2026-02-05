@@ -1,0 +1,120 @@
+name: Score Submission
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - "submissions/inbox/**/predictions.csv"
+      - "submissions/inbox/**/metadata.json"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+
+      - name: Decrypt hidden test labels
+        run: |
+          mkdir -p data/private
+          unzip -P "$TEST_LABELS_PASSWORD" data/test_labels.zip -d data/private
+        env:
+          TEST_LABELS_PASSWORD: ${{ secrets.TEST_LABELS_PASSWORD }}
+
+      - name: Locate submission files
+        id: locate
+        shell: bash
+        run: |
+          PRED_PATH="$(find submissions/inbox -name predictions.csv -type f | head -n 1)"
+          if [ -z "$PRED_PATH" ]; then
+            echo "No predictions.csv found"
+            exit 1
+          fi
+          META_PATH="$(dirname "$PRED_PATH")/metadata.json"
+          if [ ! -f "$META_PATH" ]; then
+            # allow missing metadata.json; it will be treated as empty
+            META_PATH=""
+          fi
+          echo "pred_path=$PRED_PATH" >> $GITHUB_OUTPUT
+          echo "meta_path=$META_PATH" >> $GITHUB_OUTPUT
+          echo "run_dir=$(dirname "$PRED_PATH")" >> $GITHUB_OUTPUT
+
+      - name: Validate submission
+        run: |
+          python competition/validate_submission.py --pred "${{ steps.locate.outputs.pred_path }}" --test "data/public/test.csv"
+
+      - name: Evaluate
+        id: eval
+        shell: bash
+        run: |
+          set -e
+          OUT="$(python competition/evaluate.py --pred "${{ steps.locate.outputs.pred_path }}" --labels "data/private/test_labels.csv")"
+          echo "$OUT"
+          SCORE_LINE="$(echo "$OUT" | grep -E '^SCORE=' | tail -n 1)"
+          NODE_LINE="$(echo "$OUT" | grep -E '^NODE_F1=' | tail -n 1)"
+          LINK_LINE="$(echo "$OUT" | grep -E '^LINK_AUC=' | tail -n 1)"
+          SCORE="${SCORE_LINE#SCORE=}"
+          NODE_F1="${NODE_LINE#NODE_F1=}"
+          LINK_AUC="${LINK_LINE#LINK_AUC=}"
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "node_f1=$NODE_F1" >> $GITHUB_OUTPUT
+          echo "link_auc=$LINK_AUC" >> $GITHUB_OUTPUT
+          {
+            echo "comment<<'EOF'"
+            echo "$OUT"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## ✅ Scoring Results\n\n\`\`\`\n${{ steps.eval.outputs.comment }}\n\`\`\``;
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Update leaderboard.csv (on merge)
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        shell: bash
+        run: |
+          set -e
+          PRED="${{ steps.locate.outputs.pred_path }}"
+          META="${{ steps.locate.outputs.meta_path }}"
+          TEAM="${{ github.event.pull_request.user.login }}"
+          python competition/update_leaderboard_csv.py \
+            --csv "leaderboard/leaderboard.csv" \
+            --team "$TEAM" \
+            --score "${{ steps.eval.outputs.score }}" \
+            --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+            --link-auc "${{ steps.eval.outputs.link_auc }}" \
+            --metadata "$META"
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add leaderboard/leaderboard.csv
+          if git diff --staged --quiet; then
+            echo "No leaderboard changes"
+            exit 0
+          fi
+          git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
+          git push origin main
+

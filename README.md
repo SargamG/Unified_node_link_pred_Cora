@@ -101,19 +101,22 @@ Submissions that violate these rules may be disqualified.
 ## 6️⃣ How to Submit
 
 1. Fork this repository  
-2. Generate predictions for **all rows** in `data/test.csv`
-3. Create a CSV file in the following format:
+2. Generate predictions for **all rows** in the public test file (expected: `data/public/test.csv`)
+3. Create a folder:
+   `submissions/inbox/<team_name>/<run_id>/`
+4. Add these files:
+   - `predictions.csv`
+   - `metadata.json`
+5. `predictions.csv` should look like:
     ```csv
-    id,prediction
+    id,y_pred
     node_1708,3
     edge_12_45,0.82
-4. Node rows → prediction is a class label (integer)
-5. Edge rows → prediction is a probability in [0,1]
-6. Place the file in: submissions/ (Make sure only the latest submission csv is present in submissions. Remove any previous csv files.)
-7. Sync your forked repo and update it just before creating a PR. If there are no commits to fetch, move to the next step. 
-8. Open a Pull Request to this repository
-9. Your submission will be scored automatically and the PR will be closed. It may take 2-3 minutes for the leaderboard to update.
-10. If your submission fails, the PR will stay open and show the most likely failure reason. Make sure the submission format( no. of rows, columns, column titles, row ids) are correct.
+    ```
+   - Node rows → `y_pred` is a **class label** (integer)
+   - Edge rows → `y_pred` is a **probability** in \([0,1]\)
+6. Open a Pull Request to this repository
+7. Your PR will be **validated and scored automatically**. Once merged, the leaderboard is updated.
 
 **Note**: If your submission is not scored automatically, it is likely because your GitHub account is considered a first-time or new contributor. In this case, make any prior public contribution on GitHub (e.g., open a PR anywhere, even a typo fix), then re-submit.
 

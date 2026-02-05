@@ -8,7 +8,8 @@ from sklearn.metrics import f1_score, roc_auc_score
 # -------------------------------
 # Config
 # -------------------------------
-DATA_DIR = "data"
+# Public data location (align with template)
+DATA_DIR = "data/public"
 EMBED_DIM = 64
 EPOCHS = 50
 LR = 1e-3
@@ -142,6 +143,7 @@ for _, row in test.iterrows():
     preds.append({"id": row.id, "prediction": pred})
 
 submission = pd.DataFrame(preds)
-submission.to_csv("sample_submission.csv", index=False)
+submission_out = f"{DATA_DIR}/sample_submission.csv"
+submission.to_csv(submission_out, index=False)
 
-print("sample_submission.csv generated")
+print(f"{submission_out} generated")
