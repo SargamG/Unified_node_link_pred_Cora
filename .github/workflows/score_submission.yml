@@ -116,5 +116,5 @@ jobs:
             exit 0
           fi
           git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
-          git push origin main
+          git push origin template_branch
 
