@@ -101,6 +101,21 @@ jobs:
           META="${{ steps.locate.outputs.meta_path }}"
           TEAM="${{ github.event.pull_request.user.login }}"
           
+          # Save submission files to temp location (they're from the PR branch)
+          TEMP_DIR="/tmp/submission_files"
+          mkdir -p "$TEMP_DIR"
+          
+          # Copy predictions.csv (always exists)
+          cp "$PRED" "$TEMP_DIR/predictions.csv"
+          
+          # Copy metadata.json if it exists
+          if [ -n "$META" ] && [ -f "$META" ]; then
+            cp "$META" "$TEMP_DIR/metadata.json"
+            TEMP_META="$TEMP_DIR/metadata.json"
+          else
+            TEMP_META=""
+          fi
+          
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           
@@ -108,19 +123,28 @@ jobs:
           git fetch origin template_branch
           git checkout -B temp-leaderboard-update origin/template_branch
           
-          # Update the leaderboard with the new score
-          python competition/update_leaderboard_csv.py \
-            --csv "leaderboard/leaderboard.csv" \
-            --team "$TEAM" \
-            --score "${{ steps.eval.outputs.score }}" \
-            --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
-            --link-auc "${{ steps.eval.outputs.link_auc }}" \
-            --metadata "$META"
+          # Update the leaderboard with the new score (using temp files)
+          if [ -n "$TEMP_META" ]; then
+            python competition/update_leaderboard_csv.py \
+              --csv "leaderboard/leaderboard.csv" \
+              --team "$TEAM" \
+              --score "${{ steps.eval.outputs.score }}" \
+              --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+              --link-auc "${{ steps.eval.outputs.link_auc }}" \
+              --metadata "$TEMP_META"
+          else
+            python competition/update_leaderboard_csv.py \
+              --csv "leaderboard/leaderboard.csv" \
+              --team "$TEAM" \
+              --score "${{ steps.eval.outputs.score }}" \
+              --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+              --link-auc "${{ steps.eval.outputs.link_auc }}"
+          fi
 
           # Only commit and push if there are changes
           git add leaderboard/leaderboard.csv
           if git diff --staged --quiet; then
-            echo "No leaderboard changes"
+            echo "No leaderboard changes (score not improved)"
             exit 0
           fi
           
@@ -141,23 +165,28 @@ jobs:
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
                 # Pull latest changes and retry
                 git fetch origin template_branch
-                git rebase origin/template_branch || {
-                  echo "Rebase failed, trying fresh checkout"
-                  git rebase --abort || true
-                  git checkout -B temp-leaderboard-update origin/template_branch
-                  
-                  # Re-run the leaderboard update script
+                git checkout -B temp-leaderboard-update origin/template_branch
+                
+                # Re-run the leaderboard update script with temp files
+                if [ -n "$TEMP_META" ]; then
                   python competition/update_leaderboard_csv.py \
                     --csv "leaderboard/leaderboard.csv" \
                     --team "$TEAM" \
                     --score "${{ steps.eval.outputs.score }}" \
                     --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
                     --link-auc "${{ steps.eval.outputs.link_auc }}" \
-                    --metadata "$META"
-                  
-                  git add leaderboard/leaderboard.csv
-                  git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
-                }
+                    --metadata "$TEMP_META"
+                else
+                  python competition/update_leaderboard_csv.py \
+                    --csv "leaderboard/leaderboard.csv" \
+                    --team "$TEAM" \
+                    --score "${{ steps.eval.outputs.score }}" \
+                    --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+                    --link-auc "${{ steps.eval.outputs.link_auc }}"
+                fi
+                
+                git add leaderboard/leaderboard.csv
+                git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
                 
                 sleep 2  # Wait a bit before retrying
               fi
