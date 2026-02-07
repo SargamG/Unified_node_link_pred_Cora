@@ -6,5 +6,5 @@ This leaderboard is **auto-updated** when a submission PR is merged. For interac
 
 | Rank | Team | Model | Node F1 | Link AUC | Final Score | Date (UTC) | Notes |
 |---:|---|---|---:|---:|---:|---|---|
-| 1 | Sargam1412 |  | 0.13648284 | 0.50193967 | 0.31921126 | 2026-01-27T07:19:20Z | migrated_from_leaderboard.json |
+
 
