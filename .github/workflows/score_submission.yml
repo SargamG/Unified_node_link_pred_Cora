@@ -32,7 +32,7 @@ jobs:
       - name: Decrypt hidden test labels
         run: |
           mkdir -p data/private
-          unzip -P "$TEST_LABELS_PASSWORD" data/test_labels.zip -d data/private
+          unzip -P "$TEST_LABELS_PASSWORD" data/public/test_labels.zip -d data/private
         env:
           TEST_LABELS_PASSWORD: ${{ secrets.TEST_LABELS_PASSWORD }}
 
