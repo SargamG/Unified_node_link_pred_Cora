@@ -75,7 +75,7 @@ jobs:
           echo "node_f1=$NODE_F1" >> $GITHUB_OUTPUT
           echo "link_auc=$LINK_AUC" >> $GITHUB_OUTPUT
           {
-            echo "comment<<'EOF'"
+            echo "comment<<EOF"
             echo "$OUT"
             echo "EOF"
           } >> $GITHUB_OUTPUT
