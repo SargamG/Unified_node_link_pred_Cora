@@ -110,6 +110,10 @@ jobs:
 
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
+          
+          git fetch origin template_branch
+          git rebase origin/template_branch
+
           git add leaderboard/leaderboard.csv
           if git diff --staged --quiet; then
             echo "No leaderboard changes"
