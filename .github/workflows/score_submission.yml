@@ -94,6 +94,7 @@ jobs:
 
       - name: Update leaderboard.csv
         if: steps.eval.outcome == 'success'
+        id: update_leaderboard
         shell: bash
         run: |
           set -e
@@ -145,9 +146,11 @@ jobs:
           git add leaderboard/leaderboard.csv
           if git diff --staged --quiet; then
             echo "No leaderboard changes (score not improved)"
+            echo "leaderboard_updated=false" >> $GITHUB_OUTPUT
             exit 0
           fi
           
+          echo "leaderboard_updated=true" >> $GITHUB_OUTPUT
           git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
           
           # Push with retry logic in case of concurrent updates
@@ -195,3 +198,27 @@ jobs:
           
           echo "Failed to push after $MAX_RETRIES attempts"
           exit 1
+
+      - name: Close PR after successful evaluation
+        if: steps.eval.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const wasUpdated = '${{ steps.update_leaderboard.outputs.leaderboard_updated }}' === 'true';
+            const message = wasUpdated 
+              ? '✅ **Submission scored and leaderboard updated!**\n\nYour score has been added to the leaderboard. This PR is now being closed automatically.'
+              : '✅ **Submission scored successfully!**\n\nYour score did not improve your previous best, so the leaderboard was not updated. This PR is now being closed automatically.';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+            
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              state: 'closed'
+            });
