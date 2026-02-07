@@ -26,7 +26,7 @@ The challenge is intentionally designed so that **optimizing one task alone is i
 
 ## 2️⃣ Dataset Description
 
-The dataset is derived from a citation network and consists of the following files (located in `data/`):
+The dataset is derived from a citation network and consists of the following files (located in `data/public/`):
 
 ### 🔹 Node Features
 - `nodes.csv`
@@ -118,7 +118,7 @@ Submissions that violate these rules may be disqualified.
 6. Open a Pull Request to this repository
 7. Your PR will be **validated and scored automatically**. Once merged, the leaderboard is updated.
 
-**Note**: If your submission is not scored automatically, it is likely because your GitHub account is considered a first-time or new contributor. In this case, make any prior public contribution on GitHub (e.g., open a PR anywhere, even a typo fix), then re-submit.
+**Note**: If your submission is not scored automatically, it is likely because your GitHub account is considered a first-time or new contributor. In this case, make any prior public contribution on GitHub (e.g., open a PR anywhere, even a typo fix), then re-submit. If the scoring fails, check to make sure your predictions.csv has the correct format, number of rows and columns.
 
 ---
 
