@@ -5,7 +5,7 @@ This challenge explores how well a **single graph neural network (GNN)** can lea
 
 Participants must train a model that performs well on **both node classification and link prediction**, using only the provided graph data and within strict constraints.
 
-### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora/leaderboard.html)
+### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora)
 ---
 
 ## 1️⃣ Problem Statement
@@ -128,7 +128,7 @@ Submissions that violate these rules may be disqualified.
 - Only the best score per participant is retained
 - Scores update instantly after PR submission
 
-### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora/leaderboard.html)
+### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora)
 ---
 
 ## 📌 Getting Started
@@ -143,15 +143,8 @@ Participants are encouraged to improve upon it. Focus on improving the GNN's lea
 
 ---
 
-## 💡 Inspiration for the challenge
-### Inspiration from the One-For-All (OFA) Paper
+## References
 
-This challenge is inspired by the motivation of the One-For-All (OFA) paper, which highlights the tension between different graph tasks when using a single GNN. As discussed in its introduction:
+- [Deep Graph Learning Playlist](https://www.youtube.com/playlist?list=PLug43ldmRSo14Y_vt7S6vanPGh-JpHR7T)
+- [One for All: Towards Training One Graph Model for All Classification Tasks](https://arxiv.org/html/2310.00149v3)
 
-*“For node-level tasks, proper smoothing of the node features leads to good performance. However, for link-level and graph-level tasks, encoding the local structure is vital to success, encouraging a line of work that develops more expressive GNNs. Generally, a powerful model for node-level tasks may not work on link-level or graph-level tasks.”*
-
-This challenge adopts the same conceptual question by requiring a single GNN to support both node classification and link prediction.
-
-### Staying Within Lecture Scope
-
-While inspired by OFA, the challenge does not require participants to implement complex architectures proposed in the paper. Instead, participants learn shared node embeddings using a single GNN, and apply separate MLP heads for node classification and link prediction. This structure, also used in the provided baseline, captures the essence of OFA’s motivation while relying only on techniques covered in the DGL lectures (particularly Lectures 2 and 3), such as learning feature embeddings and designing and training GNNs.
