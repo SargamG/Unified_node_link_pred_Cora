@@ -2,7 +2,7 @@ name: Score Submission
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
     paths:
       - "submissions/inbox/**/predictions.csv"
       - "submissions/inbox/**/metadata.json"
@@ -32,7 +32,7 @@ jobs:
       - name: Decrypt hidden test labels
         run: |
           mkdir -p data/private
-          unzip -P "$TEST_LABELS_PASSWORD" data/test_labels.zip -d data/private
+          unzip -P "$TEST_LABELS_PASSWORD" data/public/test_labels.zip -d data/private
         env:
           TEST_LABELS_PASSWORD: ${{ secrets.TEST_LABELS_PASSWORD }}
 
@@ -75,7 +75,7 @@ jobs:
           echo "node_f1=$NODE_F1" >> $GITHUB_OUTPUT
           echo "link_auc=$LINK_AUC" >> $GITHUB_OUTPUT
           {
-            echo "comment<<'EOF'"
+            echo "comment<<EOF"
             echo "$OUT"
             echo "EOF"
           } >> $GITHUB_OUTPUT
@@ -92,8 +92,8 @@ jobs:
               body
             });
 
-      - name: Update leaderboard.csv (on merge)
-        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+      - name: Update leaderboard.csv
+        if: steps.eval.outcome == 'success'
         shell: bash
         run: |
           set -e
@@ -116,5 +116,5 @@ jobs:
             exit 0
           fi
           git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
-          git push origin main
+          git push origin HEAD:template_branch
 
