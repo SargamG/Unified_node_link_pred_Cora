@@ -104,9 +104,11 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           
+          # Checkout a fresh copy of template_branch to ensure we have latest leaderboard
           git fetch origin template_branch
-          git rebase origin/template_branch
+          git checkout -B temp-leaderboard-update origin/template_branch
           
+          # Update the leaderboard with the new score
           python competition/update_leaderboard_csv.py \
             --csv "leaderboard/leaderboard.csv" \
             --team "$TEAM" \
@@ -115,11 +117,52 @@ jobs:
             --link-auc "${{ steps.eval.outputs.link_auc }}" \
             --metadata "$META"
 
+          # Only commit and push if there are changes
           git add leaderboard/leaderboard.csv
           if git diff --staged --quiet; then
             echo "No leaderboard changes"
             exit 0
           fi
+          
           git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
-          git push origin HEAD:template_branch
-
+          
+          # Push with retry logic in case of concurrent updates
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if git push origin temp-leaderboard-update:template_branch; then
+              echo "Successfully pushed leaderboard update"
+              exit 0
+            else
+              echo "Push failed, retrying... ($((RETRY_COUNT + 1))/$MAX_RETRIES)"
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                # Pull latest changes and retry
+                git fetch origin template_branch
+                git rebase origin/template_branch || {
+                  echo "Rebase failed, trying fresh checkout"
+                  git rebase --abort || true
+                  git checkout -B temp-leaderboard-update origin/template_branch
+                  
+                  # Re-run the leaderboard update script
+                  python competition/update_leaderboard_csv.py \
+                    --csv "leaderboard/leaderboard.csv" \
+                    --team "$TEAM" \
+                    --score "${{ steps.eval.outputs.score }}" \
+                    --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+                    --link-auc "${{ steps.eval.outputs.link_auc }}" \
+                    --metadata "$META"
+                  
+                  git add leaderboard/leaderboard.csv
+                  git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
+                }
+                
+                sleep 2  # Wait a bit before retrying
+              fi
+            fi
+          done
+          
+          echo "Failed to push after $MAX_RETRIES attempts"
+          exit 1
