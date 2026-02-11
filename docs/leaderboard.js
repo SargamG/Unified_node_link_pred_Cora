@@ -49,9 +49,8 @@ function renderTable(){
 
   rows.forEach((r, idx) => {
     const tr = document.createElement("tr");
-    const rank = idx + 1;
     const cells = [
-      ["rank", rank],
+      ["rank", r.rank],
       ["team", r.team],
       ["model", r.model],
       ["node_f1", r.node_f1],
@@ -200,6 +199,27 @@ async function main(){
 
     state.rows = cleaned;
 
+    // Compute official competition rank (based only on score desc)
+    const scoreSorted = [...cleaned].sort((a,b) => {
+      const av = parseFloat(a.score) || -Infinity;
+      const bv = parseFloat(b.score) || -Infinity;
+      return bv - av;
+    });
+    
+    let rank = 0;
+    let prevScore = null;
+    let position = 0;
+    
+    scoreSorted.forEach(r => {
+      position++;
+      const s = parseFloat(r.score) || -Infinity;
+      if (s !== prevScore) {
+        rank = position;
+        prevScore = s;
+      }
+      r.rank = rank;
+    });
+    
     // fill model options
     const modelSet = new Set(cleaned.map(r => r.model).filter(Boolean));
     const sel = document.getElementById("modelFilter");
