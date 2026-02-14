@@ -62,7 +62,8 @@ jobs:
           python encryption/decrypt.py "${{ steps.locate.outputs.enc_path }}"
           
           # The decrypt script outputs: file.enc → file.decrypted.csv
-          DECRYPTED="${{ steps.locate.outputs.enc_path }}.decrypted.csv"
+          DECRYPTED="${{ steps.locate.outputs.enc_path }}"
+          DECRYPTED="${DECRYPTED%.enc}.decrypted.csv"
           
           # Rename to predictions.csv so existing code works unchanged
           mv "$DECRYPTED" "${{ steps.locate.outputs.run_dir }}/predictions.csv"
