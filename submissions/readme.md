@@ -5,10 +5,10 @@ Submit by opening a Pull Request that adds a folder:
 `submissions/inbox/<team_name>/<run_id>/`
 
 Required files:
-- `predictions.csv`
+- `predictions.csv.enc`
 - `metadata.json`
 
-### `predictions.csv` format
+### `predictions.csv` format (later encrypted to predictions.csv.enc)
 
 Preferred columns:
 
