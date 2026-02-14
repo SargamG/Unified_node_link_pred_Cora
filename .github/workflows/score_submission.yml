@@ -121,6 +121,7 @@ jobs:
           
           # Copy predictions.csv (always exists)
           cp "$PRED" "$TEMP_DIR/predictions.csv"
+          rm -f "$PRED"
           
           # Copy metadata.json if it exists
           if [ -n "$META" ] && [ -f "$META" ]; then
