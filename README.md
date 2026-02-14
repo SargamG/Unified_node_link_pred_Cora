@@ -128,7 +128,7 @@ Submissions that violate these rules may be disqualified.
 
 6. Encrypt Your Predictions (Required)
 
-For security and fairness, you **must encrypt your submission before uploading**.
+   For security and fairness, you **must encrypt your submission before uploading**.
 
   - **Install dependency (if not already installed)**:
 
