@@ -191,7 +191,6 @@ Submissions that violate these rules may be disqualified.
 ## 7️⃣ Leaderboard
 
 🏆 The live leaderboard is maintained automatically:
-- Only the best score per participant is retained
 - Scores update instantly after PR submission
 
 ### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora)
