@@ -65,33 +65,13 @@ def main() -> None:
     csv_path = Path(args.csv)
     rows = _read_existing(csv_path)
 
-    # Keep best score per team (replace if improved)
-    replaced = False
-    out_rows: list[dict] = []
+    # Enforce ONE submission per team
     for r in rows:
-        if (r.get("team") or "").strip() != team:
-            out_rows.append(r)
-            continue
-        try:
-            old_score = float(r.get("score") or float("-inf"))
-        except Exception:
-            old_score = float("-inf")
-        if args.score <= old_score:
-            # keep old row, do not update
-            out_rows.append(r)
-            replaced = True
-        # else: drop old row (replace below)
-        else:
-            replaced = True
+        if (r.get("team") or "").strip() == team:
+            raise ValueError(f"Team '{team}' has already submitted. Only one submission is allowed.")
 
-    if replaced:
-        # If old row existed and was better, we already kept it.
-        already_has = any((r.get("team") or "").strip() == team for r in out_rows)
-        if already_has:
-            _write_all(csv_path, out_rows)
-            return
 
-    out_rows.append(
+    rows.append(
         {
             "timestamp_utc": _utc_now_iso(),
             "team": team,
@@ -103,7 +83,7 @@ def main() -> None:
         }
     )
 
-    _write_all(csv_path, out_rows)
+    _write_all(csv_path, rows)
 
 
 if __name__ == "__main__":

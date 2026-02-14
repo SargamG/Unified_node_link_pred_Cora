@@ -6,5 +6,3 @@ This leaderboard is **auto-updated** when a submission PR is merged. For interac
 
 | Rank | Team | Model | Node F1 | Link AUC | Final Score | Date (UTC) | Notes |
 |---:|---|---|---:|---:|---:|---|---|
-
-

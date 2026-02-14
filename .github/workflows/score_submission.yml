@@ -4,7 +4,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "submissions/inbox/**/predictions.csv"
+      - "submissions/inbox/**/*.enc"
       - "submissions/inbox/**/metadata.json"
 
 permissions:
@@ -28,6 +28,7 @@ jobs:
       - name: Install deps
         run: |
           pip install -r requirements.txt
+          pip install cryptography python-dotenv
 
       - name: Decrypt hidden test labels
         run: |
@@ -40,30 +41,42 @@ jobs:
         id: locate
         shell: bash
         run: |
-          PRED_PATH="$(find submissions/inbox -name predictions.csv -type f | head -n 1)"
-          if [ -z "$PRED_PATH" ]; then
-            echo "No predictions.csv found"
+          ENC_PATH="$(find submissions/inbox -name '*.enc' -type f | head -n 1)"
+          if [ -z "$ENC_PATH" ]; then
+            echo "No encrypted submission found"
             exit 1
           fi
-          META_PATH="$(dirname "$PRED_PATH")/metadata.json"
+          META_PATH="$(dirname "$ENC_PATH")/metadata.json"
           if [ ! -f "$META_PATH" ]; then
             # allow missing metadata.json; it will be treated as empty
             META_PATH=""
           fi
-          echo "pred_path=$PRED_PATH" >> $GITHUB_OUTPUT
+          echo "enc_path=$ENC_PATH" >> $GITHUB_OUTPUT
           echo "meta_path=$META_PATH" >> $GITHUB_OUTPUT
-          echo "run_dir=$(dirname "$PRED_PATH")" >> $GITHUB_OUTPUT
+          echo "run_dir=$(dirname "$ENC_PATH")" >> $GITHUB_OUTPUT
+
+      - name: Decrypt submission
+        env:
+          SUBMISSION_PRIVATE_KEY: ${{ secrets.SUBMISSION_PRIVATE_KEY }}
+        run: |
+          python encryption/decrypt.py "${{ steps.locate.outputs.enc_path }}"
+          
+          # The decrypt script outputs: file.enc → file.decrypted.csv
+          DECRYPTED="${{ steps.locate.outputs.enc_path }}.decrypted.csv"
+          
+          # Rename to predictions.csv so existing code works unchanged
+          mv "$DECRYPTED" "${{ steps.locate.outputs.run_dir }}/predictions.csv"
 
       - name: Validate submission
         run: |
-          python competition/validate_submission.py --pred "${{ steps.locate.outputs.pred_path }}" --test "data/public/test.csv"
+          python competition/validate_submission.py --pred "${{ steps.locate.outputs.run_dir }}/predictions.csv" --test "data/public/test.csv"
 
       - name: Evaluate
         id: eval
         shell: bash
         run: |
           set -e
-          OUT="$(python competition/evaluate.py --pred "${{ steps.locate.outputs.pred_path }}" --labels "data/private/test_labels.csv")"
+          OUT="$(python competition/evaluate.py --pred "${{ steps.locate.outputs.run_dir }}/predictions.csv" --labels "data/private/test_labels.csv")"
           echo "$OUT"
           SCORE_LINE="$(echo "$OUT" | grep -E '^SCORE=' | tail -n 1)"
           NODE_LINE="$(echo "$OUT" | grep -E '^NODE_F1=' | tail -n 1)"
@@ -94,27 +107,145 @@ jobs:
 
       - name: Update leaderboard.csv
         if: steps.eval.outcome == 'success'
+        id: update_leaderboard
         shell: bash
         run: |
           set -e
-          PRED="${{ steps.locate.outputs.pred_path }}"
+          PRED="${{ steps.locate.outputs.run_dir }}/predictions.csv"
           META="${{ steps.locate.outputs.meta_path }}"
           TEAM="${{ github.event.pull_request.user.login }}"
-          python competition/update_leaderboard_csv.py \
-            --csv "leaderboard/leaderboard.csv" \
-            --team "$TEAM" \
-            --score "${{ steps.eval.outputs.score }}" \
-            --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
-            --link-auc "${{ steps.eval.outputs.link_auc }}" \
-            --metadata "$META"
-
+          
+          # Save submission files to temp location (they're from the PR branch)
+          TEMP_DIR="/tmp/submission_files"
+          mkdir -p "$TEMP_DIR"
+          
+          # Copy predictions.csv (always exists)
+          cp "$PRED" "$TEMP_DIR/predictions.csv"
+          rm -f "$PRED"
+          
+          # Copy metadata.json if it exists
+          if [ -n "$META" ] && [ -f "$META" ]; then
+            cp "$META" "$TEMP_DIR/metadata.json"
+            TEMP_META="$TEMP_DIR/metadata.json"
+          else
+            TEMP_META=""
+          fi
+          
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
+          
+          # Checkout a fresh copy of template_branch to ensure we have latest leaderboard
+          git fetch origin template_branch
+          git checkout -B temp-leaderboard-update origin/template_branch
+          
+          # Update the leaderboard with the new score (using temp files)
+          if [ -n "$TEMP_META" ]; then
+            python competition/update_leaderboard_csv.py \
+              --csv "leaderboard/leaderboard.csv" \
+              --team "$TEAM" \
+              --score "${{ steps.eval.outputs.score }}" \
+              --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+              --link-auc "${{ steps.eval.outputs.link_auc }}" \
+              --metadata "$TEMP_META"
+          else
+            python competition/update_leaderboard_csv.py \
+              --csv "leaderboard/leaderboard.csv" \
+              --team "$TEAM" \
+              --score "${{ steps.eval.outputs.score }}" \
+              --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+              --link-auc "${{ steps.eval.outputs.link_auc }}"
+          fi
+
+          # Only commit and push if there are changes
           git add leaderboard/leaderboard.csv
           if git diff --staged --quiet; then
-            echo "No leaderboard changes"
+            echo "No leaderboard changes (score not improved)"
+            echo "leaderboard_updated=false" >> $GITHUB_OUTPUT
             exit 0
           fi
+          
+          echo "leaderboard_updated=true" >> $GITHUB_OUTPUT
           git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
-          git push origin HEAD:template_branch
+          
+          # Push with retry logic in case of concurrent updates
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if git push origin temp-leaderboard-update:template_branch; then
+              echo "Successfully pushed leaderboard update"
+              exit 0
+            else
+              echo "Push failed, retrying... ($((RETRY_COUNT + 1))/$MAX_RETRIES)"
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                # Pull latest changes and retry
+                git fetch origin template_branch
+                git checkout -B temp-leaderboard-update origin/template_branch
+                
+                # Re-run the leaderboard update script with temp files
+                if [ -n "$TEMP_META" ]; then
+                  python competition/update_leaderboard_csv.py \
+                    --csv "leaderboard/leaderboard.csv" \
+                    --team "$TEAM" \
+                    --score "${{ steps.eval.outputs.score }}" \
+                    --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+                    --link-auc "${{ steps.eval.outputs.link_auc }}" \
+                    --metadata "$TEMP_META"
+                else
+                  python competition/update_leaderboard_csv.py \
+                    --csv "leaderboard/leaderboard.csv" \
+                    --team "$TEAM" \
+                    --score "${{ steps.eval.outputs.score }}" \
+                    --node-f1 "${{ steps.eval.outputs.node_f1 }}" \
+                    --link-auc "${{ steps.eval.outputs.link_auc }}"
+                fi
+                
+                git add leaderboard/leaderboard.csv
+                git commit -m "Update leaderboard.csv for @${{ github.event.pull_request.user.login }}"
+                
+                sleep 2  # Wait a bit before retrying
+              fi
+            fi
+          done
+          
+          echo "Failed to push after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Close PR after successful evaluation
+        if: steps.update_leaderboard.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const wasUpdated = '${{ steps.update_leaderboard.outputs.leaderboard_updated }}' === 'true';
+            const message = wasUpdated 
+              ? '✅ **Submission scored and leaderboard updated!**\n\nYour score has been added to the leaderboard. This PR is now being closed automatically.'
+              : '✅ **Submission scored successfully!**\n\nYour score did not improve your previous best, so the leaderboard was not updated. This PR is now being closed automatically.';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+            
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              state: 'closed'
+            });
+
+      - name: Comment on duplicate submission
+        if: steps.update_leaderboard.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "❌ You have already submitted once. Only one submission per GitHub user is allowed."
+            });
 
