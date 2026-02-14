@@ -4,7 +4,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "submissions/inbox/**/predictions.csv"
+      - "submissions/inbox/**/*.enc"
       - "submissions/inbox/**/metadata.json"
 
 permissions:
@@ -28,6 +28,7 @@ jobs:
       - name: Install deps
         run: |
           pip install -r requirements.txt
+          pip install cryptography python-dotenv
 
       - name: Decrypt hidden test labels
         run: |
@@ -40,30 +41,42 @@ jobs:
         id: locate
         shell: bash
         run: |
-          PRED_PATH="$(find submissions/inbox -name predictions.csv -type f | head -n 1)"
-          if [ -z "$PRED_PATH" ]; then
-            echo "No predictions.csv found"
+          ENC_PATH="$(find submissions/inbox -name '*.enc' -type f | head -n 1)"
+          if [ -z "$ENC_PATH" ]; then
+            echo "No encrypted submission found"
             exit 1
           fi
-          META_PATH="$(dirname "$PRED_PATH")/metadata.json"
+          META_PATH="$(dirname "$ENC_PATH")/metadata.json"
           if [ ! -f "$META_PATH" ]; then
             # allow missing metadata.json; it will be treated as empty
             META_PATH=""
           fi
-          echo "pred_path=$PRED_PATH" >> $GITHUB_OUTPUT
+          echo "enc_path=$ENC_PATH" >> $GITHUB_OUTPUT
           echo "meta_path=$META_PATH" >> $GITHUB_OUTPUT
-          echo "run_dir=$(dirname "$PRED_PATH")" >> $GITHUB_OUTPUT
+          echo "run_dir=$(dirname "$ENC_PATH")" >> $GITHUB_OUTPUT
+
+      - name: Decrypt submission
+        env:
+          SUBMISSION_PRIVATE_KEY: ${{ secrets.SUBMISSION_PRIVATE_KEY }}
+        run: |
+          python encryption/decrypt.py "${{ steps.locate.outputs.enc_path }}"
+          
+          # The decrypt script outputs: file.enc → file.decrypted.csv
+          DECRYPTED="${{ steps.locate.outputs.enc_path }}.decrypted.csv"
+          
+          # Rename to predictions.csv so existing code works unchanged
+          mv "$DECRYPTED" "${{ steps.locate.outputs.run_dir }}/predictions.csv"
 
       - name: Validate submission
         run: |
-          python competition/validate_submission.py --pred "${{ steps.locate.outputs.pred_path }}" --test "data/public/test.csv"
+          python competition/validate_submission.py --pred "${{ steps.locate.outputs.run_dir }}/predictions.csv" --test "data/public/test.csv"
 
       - name: Evaluate
         id: eval
         shell: bash
         run: |
           set -e
-          OUT="$(python competition/evaluate.py --pred "${{ steps.locate.outputs.pred_path }}" --labels "data/private/test_labels.csv")"
+          OUT="$(python competition/evaluate.py --pred "${{ steps.locate.outputs.run_dir }}/predictions.csv" --labels "data/private/test_labels.csv")"
           echo "$OUT"
           SCORE_LINE="$(echo "$OUT" | grep -E '^SCORE=' | tail -n 1)"
           NODE_LINE="$(echo "$OUT" | grep -E '^NODE_F1=' | tail -n 1)"
@@ -98,7 +111,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          PRED="${{ steps.locate.outputs.pred_path }}"
+          PRED="${{ steps.locate.outputs.run_dir }}/predictions.csv"
           META="${{ steps.locate.outputs.meta_path }}"
           TEAM="${{ github.event.pull_request.user.login }}"
           
