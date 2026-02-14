@@ -166,15 +166,15 @@ Submissions that violate these rules may be disqualified.
    
 8.  Submit via Pull Request
 
-   Commit and push **only the encrypted file**:
+    Commit and push **only the encrypted file**:
    
-   ```bash
-   git add submissions/inbox/<team_name>/<run_id>/predictions.csv.enc
-   git commit -m "Submission: <team_name>"
-   git push
-   ```
+      ```bash
+      git add submissions/inbox/<team_name>/<run_id>/predictions.csv.enc
+      git commit -m "Submission: <team_name>"
+      git push
+      ```
    
-   Then open a **Pull Request** to this repository.
+    Then open a **Pull Request** to this repository.
 
 **Important Rules**
 
