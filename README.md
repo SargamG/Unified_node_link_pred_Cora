@@ -1,5 +1,5 @@
-# Unified_node_link_pred_Cora
-# 🧠 Multi-Task Graph Representation Challenge
+# NodeLink Nexus
+# Multi-Task Graph Representation Challenge
 
 This challenge explores how well a **single graph neural network (GNN)** can learn **shared node representations** that generalize across **multiple graph tasks** on the same dataset.
 
@@ -8,7 +8,7 @@ Participants must train a model that performs well on **both node classification
 ### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora)
 ---
 
-## 1️⃣ Problem Statement
+## 1. Problem Statement
 
 Given a citation graph where:
 - nodes represent research papers,
@@ -24,32 +24,32 @@ The challenge is intentionally designed so that **optimizing one task alone is i
 
 ---
 
-## 2️⃣ Dataset Description
+## 2️. Dataset Description
 
 The dataset is derived from a citation network and consists of the following files (located in `data/public/`):
 
-### 🔹 Node Features
+###  Node Features
 - `nodes.csv`
 - 2708 nodes
 - 1433 features per node (`x0` to `x1432`)
 - Each row corresponds to a unique node ID
 
-### 🔹 Node Labels
+###  Node Labels
 - Training labels: nodes `0–639`
 - Test labels: nodes `1708–2707`
 - Nodes `640–1707` are **unlabeled** and must not be used for node supervision
 
-### 🔹 Graph Structure
+###  Graph Structure
 - Directed edges represent citations
 - The source cites the destination
 
 ---
 
-## 3️⃣ Task Definition
+## 3️. Task Definition
 
 This is a **multi-task learning challenge** with two tasks:
 
-### 🔹 Task 1: Node Classification
+###  Task 1: Node Classification
 **Objective:**  
 Predict the research category of unseen nodes.
 
@@ -58,7 +58,7 @@ Predict the research category of unseen nodes.
 
 ---
 
-### 🔹 Task 2: Link Prediction
+###  Task 2: Link Prediction
 **Objective:**  
 Predict whether a citation link exists between two nodes.
 
@@ -71,34 +71,34 @@ Both tasks must be solved using **a shared node embedding space**.
 
 ---
 
-## 4️⃣ Evaluation Metric
+## 4️. Evaluation Metric
 
 Each submission is evaluated on **both tasks**, and a single final score is computed.
 
-### 🔹 Metrics
+###  Metrics
 - **Node Classification:** Macro F1-score  
 - **Link Prediction:** ROC-AUC  
 
-### 🔹 Final Score
+###  Final Score
 - Final Score = 0.5 × Node Macro-F1 + 0.5 × Link ROC-AUC
 - Equal weighting ensures that neither task can be ignored.
 
 ---
 
-## 5️⃣ Rules & Constraints
+## 5️. Rules & Constraints
 
 To keep the challenge fair and focused:
 
-- ❌ No external datasets or pretrained models are allowed
-- ❌ No manual label engineering  
-- ✅ Any GNN architecture allowed (GCN, GraphSAGE, etc.)
-- ❌ Solutions should not use different embeddings for both tasks
+-  No external datasets or pretrained models are allowed
+-  No manual label engineering  
+-  Any GNN architecture allowed (GCN, GraphSAGE, etc.)
+-  Solutions should not use different embeddings for both tasks
 
 Submissions that violate these rules may be disqualified.
 
 ---
 
-## 6️⃣ How to Submit
+## 6️. How to Submit
 
 1. **Fork** this repository.
 
@@ -154,7 +154,7 @@ Submissions that violate these rules may be disqualified.
       rm submissions/inbox/<team_name>/<run_id>/predictions.csv
       ```
       
-      ⚠️ Only the encrypted `.enc` file should be submitted.
+       Only the encrypted `.enc` file should be submitted.
 
 7. Your folder should now contain:
 
@@ -188,15 +188,15 @@ Submissions that violate these rules may be disqualified.
 
 ---
 
-## 7️⃣ Leaderboard
+## 7️. Leaderboard
 
-🏆 The live leaderboard is maintained automatically:
+ The live leaderboard is maintained automatically:
 - Scores update instantly after PR submission
 
 ### [View Live Leaderboard](https://SargamG.github.io/Unified_node_link_pred_Cora)
 ---
 
-## 📌 Getting Started
+##  Getting Started
 
 A simple baseline using a GraphSAGE-style model is provided in baseline.py
 It demonstrates:
